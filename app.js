@@ -7,10 +7,14 @@ const passport = require('passport');
 const Wit = require('node-wit').Wit;
 const token = "7FT3FOM7CGM2AAN2K7OST6H7WOFGGTGS";
 const apiKey = "338fcef200d92da1408c75043a3a1c7c";
+const baseUrl = 'https://api.openweathermap.org/data/2.5/weather?appid='+apiKey;
+const locParam = '&q=';
 const sessionId = 'my-user-session-42';
 const log = require('node-wit').log;
 const users = require('./routes/users');
 const request = require('request');
+const http = require('http');
+const Client = require('node-rest-client').Client;
 
 const {DEFAULT_MAX_STEPS} = require('./lib/config');
 const logger = require('./lib/log.js');
@@ -21,6 +25,7 @@ mongoose.connect('mongodb://localhost/chat');
 mongoose.Promise = require('bluebird');
 
 const app = express();
+const client = new Client();
 
 const actions = {
   send(request, response) {
@@ -34,22 +39,29 @@ const actions = {
   getForecast({context, entities}) {
     return new Promise(function(resolve, reject) {
       let location = firstEntityValue(entities, "location");
-      if (location) {
-        context.forecast = 'sunny in ' + location;
-        delete context.missingLocation;
-      } else {
-        context.missingLocation = true;
-        delete context.forecast;
-      }
-      return resolve(context);
+      let data;
+        request('http://api.openweathermap.org/data/2.5/weather?appid=338fcef200d92da1408c75043a3a1c7c&q='+location, function (error, response, body) {
+		    	var jsonData = JSON.parse(body);
+          data = jsonData;
+          console.log(data);
+          context.forecast = jsonData;
+          return resolve(context);
+        });
     });
   },
-  getRain({context, entities}) {
-    return new Promise(function(resolve, reject) {
-      context.rain = "It won't rain.";
-      return resolve(context);
-    });
-  },
+  // getRain({context, entities}) {
+  //   return new Promise(function(resolve, reject) {
+  //     context.rain = "It won't rain.";
+  //     return resolve(context);
+  //   });
+  // },
+  // getForcastTime({context, entities}) {
+  //   return new Promise(function(resolve, reject) {
+  //     let time = firstEntityValue(entities, "datetime");
+  //     context.forecast = "Weather will be nice on " + time;
+  //     return resolve(context);
+  //   });
+  // },
 };
 
 const wit = new Wit({
@@ -79,18 +91,18 @@ const firstEntityValue = (entities, entity) => {
 
 app.get('/', (req,res) => {
 	res.setHeader('content-type', 'application/json');
-	res.json({status: "ok", message: "you are in the root"});
+  res.json({status: "ok", message: "you are in the root route"});
+});
+
+app.get('/test', (req,res) => {
+	res.setHeader('content-type', 'application/json');
+	res.json({status: "ok", message: "you are in the test route"});
 });
 
 app.post('/chat', (req, res) => {
 	res.setHeader('content-type', 'application/json');
 	let message = req.body.message;
   let maxSteps = 10;
-	// wit.converse(sessionId, message, {})
-  // .then((data) => {
-  //   console.log('Yay, got Wit.ai response: ' + JSON.stringify(data));
-  //   res.json({location: data.entities.location, intent:data.entities.intent});
-  // })
   let context = typeof initContext === 'object' ? initContext : {};
   const sessionId = uuid.v1();
 
