@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -9,6 +11,11 @@ const sessionId = 'my-user-session-42';
 const log = require('node-wit').log;
 const users = require('./routes/users');
 const request = require('request');
+
+const {DEFAULT_MAX_STEPS} = require('./lib/config');
+const logger = require('./lib/log.js');
+const readline = require('readline');
+const uuid = require('uuid');
 
 mongoose.connect('mongodb://localhost/chat');
 mongoose.Promise = require('bluebird');
@@ -26,9 +33,20 @@ const actions = {
   },
   getForecast({context, entities}) {
     return new Promise(function(resolve, reject) {
-      // Here should go the api call, e.g.:
-      // context.forecast = apiCall(context.loc)
-      context.forecast = 'sunny';
+      let location = firstEntityValue(entities, "location");
+      if (location) {
+        context.forecast = 'sunny in ' + location;
+        delete context.missingLocation;
+      } else {
+        context.missingLocation = true;
+        delete context.forecast;
+      }
+      return resolve(context);
+    });
+  },
+  getRain({context, entities}) {
+    return new Promise(function(resolve, reject) {
+      context.rain = "It won't rain.";
       return resolve(context);
     });
   },
@@ -52,8 +70,7 @@ const firstEntityValue = (entities, entity) => {
   const val = entities && entities[entity] &&
     Array.isArray(entities[entity]) &&
     entities[entity].length > 0 &&
-    entities[entity][0].value
-  ;
+    entities[entity][0].value;
   if (!val) {
     return null;
   }
@@ -65,14 +82,26 @@ app.get('/', (req,res) => {
 	res.json({status: "ok", message: "you are in the root"});
 });
 
-app.post('/chat', (req,res) => {
+app.post('/chat', (req, res) => {
 	res.setHeader('content-type', 'application/json');
 	let message = req.body.message;
-	wit.converse('my-user-session-42', message, {})
-  .then((data) => {
-    console.log('Yay, got Wit.ai response: ' + JSON.stringify(data));
-    res.json({location: data.entities.location, intent:data.entities.intent});
+  let maxSteps = 10;
+	// wit.converse(sessionId, message, {})
+  // .then((data) => {
+  //   console.log('Yay, got Wit.ai response: ' + JSON.stringify(data));
+  //   res.json({location: data.entities.location, intent:data.entities.intent});
+  // })
+  let context = typeof initContext === 'object' ? initContext : {};
+  const sessionId = uuid.v1();
+
+  const steps = maxSteps ? maxSteps : DEFAULT_MAX_STEPS;
+  
+  wit.runActions(sessionId, message, context, steps)
+ .then((ctx) => {
+    context = ctx;
+    res.json(context);
   })
+  .catch(err => console.error(err));
 });
 
 app.listen(3000, () => {
