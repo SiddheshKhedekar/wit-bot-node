@@ -15,7 +15,7 @@ const users = require('./routes/users');
 const request = require('request');
 const http = require('http');
 const Client = require('node-rest-client').Client;
-
+const jwt = require('jsonwebtoken');
 const {DEFAULT_MAX_STEPS} = require('./lib/config');
 const logger = require('./lib/log.js');
 const readline = require('readline');
@@ -44,24 +44,42 @@ const actions = {
 		    	var jsonData = JSON.parse(body);
           data = jsonData;
           console.log(data);
-          context.forecast = jsonData;
+          context.forecast = 'weather';
+          context.location = 1;
+          context.rain = 0;
+          context.locVal = location;
           return resolve(context);
         });
     });
   },
-  // getRain({context, entities}) {
-  //   return new Promise(function(resolve, reject) {
-  //     context.rain = "It won't rain.";
-  //     return resolve(context);
-  //   });
-  // },
-  // getForcastTime({context, entities}) {
-  //   return new Promise(function(resolve, reject) {
-  //     let time = firstEntityValue(entities, "datetime");
-  //     context.forecast = "Weather will be nice on " + time;
-  //     return resolve(context);
-  //   });
-  // },
+  getForcastNoLoc({context, entities}) {
+    return new Promise(function(resolve, reject) {
+      context.forecast = 'weather';
+      context.location = 0;
+      context.rain = 0;
+      context.locVal = '';
+      return resolve(context);
+    });
+  },
+  getRain({context, entities}) {
+    return new Promise(function(resolve, reject) {
+      let location = firstEntityValue(entities, "location");
+      context.forecast = 'weather';
+      context.location = 1;
+      context.rain = 1;
+      context.locVal = location;
+      return resolve(context);
+    });
+  },
+  getRainNoLoc({context, entities}) {
+    return new Promise(function(resolve, reject) {
+      context.forecast = 'weather';
+      context.location = 0;
+      context.rain = 1;
+      context.locVal = '';
+      return resolve(context);
+    });
+  },
 };
 
 const wit = new Wit({
@@ -99,7 +117,12 @@ app.get('/test', (req,res) => {
 	res.json({status: "ok", message: "you are in the test route"});
 });
 
-app.post('/chat', (req, res) => {
+app.get('/location', (req,res) => {
+	res.setHeader('content-type', 'application/json');
+	res.json({status: "ok", message: "your location is "+req.query.location});
+});
+
+app.post('/chat',passport.authenticate('jwt', {session: false}), (req, res) => {
 	res.setHeader('content-type', 'application/json');
 	let message = req.body.message;
   let maxSteps = 10;
