@@ -140,6 +140,6 @@ app.post('/chat',passport.authenticate('jwt', {session: false}), (req, res) => {
   .catch(err => console.error(err));
 });
 
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
 	console.log("Chat Bot started!");
 });
