@@ -21,7 +21,8 @@ const logger = require('./lib/log.js');
 const readline = require('readline');
 const uuid = require('uuid');
 
-mongoose.connect('mongodb://localhost/chat');
+//mongoose.connect('mongodb://localhost/chat');
+mongoose.connect('mongodb://rohand:ozlopassword@ds125060.mlab.com:25060/ozlo')
 mongoose.Promise = require('bluebird');
 
 const app = express();
@@ -109,17 +110,17 @@ const firstEntityValue = (entities, entity) => {
 
 app.get('/', (req,res) => {
 	res.setHeader('content-type', 'application/json');
-  res.json({status: "ok", message: "you are in the root route"});
+  res.json({status: "ok", message: "You are in the root route"});
 });
 
 app.get('/test', (req,res) => {
 	res.setHeader('content-type', 'application/json');
-	res.json({status: "ok", message: "you are in the test route"});
+	res.json({status: "ok", message: "You are in the test route"});
 });
 
 app.get('/location', (req,res) => {
 	res.setHeader('content-type', 'application/json');
-	res.json({status: "ok", message: "your location is "+req.query.location});
+	res.json({status: "ok", message: "Your location is "+req.query.location});
 });
 
 app.post('/chat',passport.authenticate('jwt', {session: false}), (req, res) => {
