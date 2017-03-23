@@ -47,6 +47,7 @@ const actions = {
           console.log(data);
           context.forecast = 'weather';
           context.location = 1;
+          context.rain = 0;
           context.locVal = location;
           return resolve(context);
         });
@@ -56,6 +57,7 @@ const actions = {
     return new Promise(function(resolve, reject) {
       context.forecast = 'weather';
       context.location = 0;
+      context.rain = 0;
       context.locVal = '';
       return resolve(context);
     });
@@ -63,16 +65,18 @@ const actions = {
   getRain({context, entities}) {
     return new Promise(function(resolve, reject) {
       let location = firstEntityValue(entities, "location");
-      context.forecast = 'rain';
+      context.forecast = 'weather';
       context.location = 1;
+      context.rain = 1;
       context.locVal = location;
       return resolve(context);
     });
   },
   getRainNoLoc({context, entities}) {
     return new Promise(function(resolve, reject) {
-      context.forecast = 'rain';
+      context.forecast = 'weather';
       context.location = 0;
+      context.rain = 1;
       context.locVal = '';
       return resolve(context);
     });
