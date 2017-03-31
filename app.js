@@ -60,18 +60,9 @@ const actions = {
       return resolve(context);
     });
   },
-  getRain({context, entities}) {
+  getDiagnos({context, entities}) {
     return new Promise(function(resolve, reject) {
-      let location = firstEntityValue(entities, "location");
-      context.forecast = 'rain';
-      context.location = 1;
-      context.locVal = location;
-      return resolve(context);
-    });
-  },
-  getRainNoLoc({context, entities}) {
-    return new Promise(function(resolve, reject) {
-      context.forecast = 'rain';
+      context.forecast = 'diagnos';
       context.location = 0;
       context.locVal = '';
       return resolve(context);
