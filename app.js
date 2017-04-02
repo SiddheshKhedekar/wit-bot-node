@@ -60,9 +60,9 @@ const actions = {
       return resolve(context);
     });
   },
-  getDiagnos({context, entities}) {
+  getGreetings({context, entities}) {
     return new Promise(function(resolve, reject) {
-      context.forecast = 'diagnos';
+      context.forecast = 'greetings';
       context.location = 0;
       context.locVal = '';
       return resolve(context);
