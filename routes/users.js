@@ -28,10 +28,11 @@ router.get('/profile', passport.authenticate('jwt', {session: false}), (req, res
 
 router.post('/authenticate', (req, res, next) => {
     res.setHeader('content-type', 'application/json');
-	let username = req.body.username;
+	  let username = req.body.username;
     let password = req.body.password;
+    let email = req.body.email;
 
-    User.getUserByUsername(username, (err, user) => {
+    User.getUserByEmail(email, (err, user) => {
     if(err) throw err;
     if(!user){
       return res.json({success: false, msg: 'User not found'});
