@@ -68,6 +68,14 @@ const actions = {
       return resolve(context);
     });
   },
+  getEnquiry({context, entities}) {
+    return new Promise(function(resolve, reject) {
+      context.forecast = 'enquiry';
+      context.location = 0;
+      context.locVal = '';
+      return resolve(context);
+    });
+  }
 };
 
 const wit = new Wit({
